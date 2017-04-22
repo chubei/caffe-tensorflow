@@ -10,15 +10,20 @@ def layer(op):
     def layer_decorated(self, *args, **kwargs):
         # Automatically set a name if not provided.
         name = kwargs.setdefault('name', self.get_unique_name(op.__name__))
-        # Figure out the layer inputs.
+        # Figure out the layer inputs, and remove them from top_layer set
         if len(self.terminals) == 0:
             raise RuntimeError('No input variables found for layer %s.' % name)
         elif len(self.terminals) == 1:
             layer_input = self.terminals[0]
+            self.top_layers.discard(layer_input)
         else:
             layer_input = list(self.terminals)
+            for layer in layer_input:
+                self.top_layers.discard(layer)
         # Perform the operation and get the output.
         layer_output = op(self, layer_input, *args, **kwargs)
+        # Mark layer_output as top_layer
+        self.top_layers.add(layer_output)
         # Add to layer LUT.
         self.layers[name] = layer_output
         # This output is now the input for the next layer.
@@ -44,6 +49,8 @@ class Network(object):
         self.use_dropout = tf.placeholder_with_default(tf.constant(1.0),
                                                        shape=[],
                                                        name='use_dropout')
+        self.top_layers = set([])
+
         self.setup()
 
     def setup(self):
