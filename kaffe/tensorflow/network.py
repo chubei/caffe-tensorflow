@@ -246,6 +246,6 @@ class Network(object):
             return output
 
     @layer
-    def dropout(self, input, keep_prob, name):
-        keep = 1 - self.use_dropout + (self.use_dropout * keep_prob)
-        return tf.nn.dropout(input, keep, name=name)
+    def dropout(self, input, dropout_ratio, name):
+        keep_prob = 1 - self.use_dropout * dropout_ratio
+        return tf.nn.dropout(input, keep_prob, name=name)
